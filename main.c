@@ -31,7 +31,6 @@ typedef struct
     int Age;
 }StudentInfo;
 
-
 typedef struct
 {
     char ID[CONFIG_CLASSINFO_ID_SIZE]; ///课程号
@@ -90,8 +89,11 @@ DYHANDLE scoinfo;
 DYHANDLE moinfo;
 DYHANDLE achinfo;
 
+/*************Global Settings & Values*************/
 int _global_login_status;
 int _global_userid;
+
+int _settings_metro_style;
 
 #define PostErrorMsgAndExit(FormatString,Args...) do{cprint(red,black);printf(FormatString,##Args);}while(0);exit(0)
 void SelfCheck()
@@ -132,8 +134,13 @@ void SelfCheck()
         PostErrorMsgAndExit("初始化成就系统失败.\n");
     }
 
-    printf("初始化网络系统...\n");
-
+    WORD _winsock_version=MAKEWORD(2,2);
+    WSADATA _winsock_init_data;
+    int ret=WSAStartup(_winsock_version,&_winsock_init_data);
+    if(ret<0)
+    {
+        PostErrorMsgAndExit("初始化网络系统失败.\n");
+    }
 
     printf("加载数据...\n");
 
@@ -154,37 +161,7 @@ void BeforeExit()
     printf("执行退出...\n");
 }
 
-int GetAction_WS(int* p,int MinVal,int MaxVal)
-{
-    int t=GetUserInputKey();
-    switch(t)
-    {
-    case KEY_UP:
-        {
-            --(*p);
-            *p=*p<MinVal?MinVal:*p;
-            *p=*p>MaxVal?MaxVal:*p;
-            return 0;
-        }
-    case KEY_DOWN:
-        {
-            ++(*p);
-            *p=*p<MinVal?MinVal:*p;
-            *p=*p>MaxVal?MaxVal:*p;
-            return 0;
-        }
-    case KEY_CONFIRM:
-        return 1;
-    default:
-        return 0;
-    }
-}
-#define TAG(tagID,realID) do{if(realID==tagID)cprint(black,yellow);else cprint(white,black);}while(0)
-#define TAGPRINT(tagID,realID,FormatString,Args...) do{TAG(tagID,realID);printf(FormatString,##Args);}while(0)
-#define INFOPRINT(tagID,realID,FormatString,Args...) do{if(tagID==realID) printf(FormatString,##Args);}while(0)
-#define INFODO(tagID,realID,USG) do{if(tagID==realID) {USG} }while(0)
-#define GetAction(realID,minVal,maxVal) GetAction_WS(&realID,minVal,maxVal)
-#define ClearInput() fflush(stdin)
+
 
 
 /************** GDI Functions*************/
@@ -255,6 +232,7 @@ MonityInfo* _FindMonityInfoByStuID_Term(const char* StuID,int Term)
 #include "InfoDel.h"
 #include "InfoSearch.h"
 #include "CloudService.h"
+#include "Settings.h"
 
 void GDI_InfoInput_MainPad()
 {
@@ -431,6 +409,11 @@ void GDI_InfoView_MainPad()
         printf("统计面板\n");
         TAG(1,cid);printf("成绩分段统计\n");
         TAG(2,cid);printf("分学期平均分分数段统计\n");
+        TAG(3,cid);printf("单人成绩统计\n");
+        TAG(4,cid);printf("宿舍成绩统计\n");
+        TAG(5,cid);printf("挂科成绩统计\n");
+        TAG(6,cid);printf("按照学习统计...\n");
+        TAG(7,cid);printf("返回\n");
         resetcolor();printf("-------------------\n");
         INFOPRINT(1,cid,"对某门功课各分数段成绩进行统计\n");
         INFOPRINT(2,cid,"分学期对学生业务课程平均分按分数段进行统计\n");
@@ -438,8 +421,26 @@ void GDI_InfoView_MainPad()
         INFOPRINT(4,cid,"以宿舍为单位进行成绩统计分析\n");
         INFOPRINT(5,cid,"以挂科次数为依据分学期对比分析\n");
         INFOPRINT(6,cid,"以业务课班级排名为依据分学期对比分析（前进或退步情况）\n");
+        INFOPRINT(7,cid,"返回到上一菜单\n");
+        if(GetAction(cid,1,7))
+        {
+            switch(cid)
+            {
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                return;
+            }
+        }
     }
 }
+
+/// Temporary defines. Used to avoid death-loop and unused warnings.
+#define _DEF_GDI_NOT_IMPLIED_(cid) do{cid=cid;printf("这个功能还没有实现呐~\n");ClearInput();getch();return;}while(0)
 
 void GDI_ScolarShip_MainPad()
 {
@@ -448,6 +449,7 @@ void GDI_ScolarShip_MainPad()
     {
         ClearScreen();
         printf("奖学金评定系统\n");
+        _DEF_GDI_NOT_IMPLIED_(cid);
     }
 }
 
@@ -457,25 +459,29 @@ void GDI_Export_MainPad()
     while(1)
     {
         ClearScreen();
-        printf("导出-本地硬盘\n");
+        printf("本地导入/导出\n");
+        _DEF_GDI_NOT_IMPLIED_(cid);
     }
 }
 
 void GDI_CloudService_MainPad()
 {
-    int cid=1;
+    // Avoid WARNING by Compiler of unused variables
+    //int cid=1;
     while(1)
     {
         ClearScreen();
         printf("HC Cloud Service 云服务平台\n");
         printf("正在登录到您的HC账户...\n");
-        GDI_GameHarbor_Login();/// Jump
+        GDI_GameHarbor_Login();/// Jump to GameHarbor Account
         if(_global_login_status==0)
         {
             return;
         }
+        GDI_CloudService_Internal_MainPad();
     }
 }
+
 
 void GDI_Settings_MainPad()
 {
@@ -484,6 +490,27 @@ void GDI_Settings_MainPad()
     {
         ClearScreen();
         printf("设置\n");
+        TAG(1,cid);printf("菜单显示风格设置\n");
+        TAG(2,cid);printf("扁平化设置\n");
+        TAG(3,cid);printf("返回\n");
+        resetcolor();printf("----------------\n");
+        INFOPRINT(1,cid,"修改菜单的显示风格,定制专属风格\n");
+        INFOPRINT(2,cid,"设置菜单是否显示为扁平化的风格\n");
+        INFOPRINT(3,cid,"返回上一菜单\n");
+        if(GetAction(cid,1,3))
+        {
+            switch(cid)
+            {
+            case 1:
+                GDI_Settings_Style();
+                break;
+            case 2:
+                GDI_Settings_Metro();
+                break;
+            case 3:
+                return;
+            }
+        }
     }
 }
 
@@ -500,7 +527,7 @@ void GDI_MainPad()
         TAG(4,cid);printf("信息查找\n");
         TAG(5,cid);printf("信息统计\n");
         TAG(6,cid);printf("评定奖学金\n");
-        TAG(7,cid);printf("导出数据到本地硬盘\n");
+        TAG(7,cid);printf("本地导入/导出\n");
         TAG(8,cid);printf("云平台\n");
         TAG(9,cid);printf("设置\n");
         TAG(10,cid);printf("退出\n");
@@ -511,7 +538,7 @@ void GDI_MainPad()
         INFOPRINT(4,cid,"进行搜索...\n");
         INFOPRINT(5,cid,"查看各种统计信息\n");
         INFOPRINT(6,cid,"奖学金自动评测系统\n");
-        INFOPRINT(7,cid,"导出数据在其他设备上查看\n");
+        INFOPRINT(7,cid,"在本地磁盘上导入和导出数据\n");
         INFODO(8,cid,{cprint(yellow,blue);printf("由HC Cloud Service提供");resetcolor();printf(" 同步您的数据到云端,在其他设备继续您的工作.\n");});
         INFOPRINT(9,cid,"调整您的设置.\n");
         INFOPRINT(10,cid,"安全的退出这个系统.未同步的数据将会自动同步.\n");
