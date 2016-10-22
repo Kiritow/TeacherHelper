@@ -6,24 +6,8 @@
 #include <windows.h>
 #include <winsock2.h>
 
-//#define DEF_GAMEHARBOR_NEED_DNS
-#define DEF_GAMEHARBOR_SERVER_DOMAIN "gameharbor.cn"
-#define DEF_GAMEHARBOR_SERVER_IP "123.206.86.73"
-#define DEF_GAMEHARBOR_SERVER_PORT 56789
-
-#define DEF_KERNEL_ENABLE 1
-#define DEF_KERNEL_OUTPUT_MESSAGE 1
-
-#define CONFIG_STUINFO_ID_SIZE 64
-#define CONFIG_STUINFO_NAME_SIZE 128
-#define CONFIG_STUINFO_DOM_SIZE 64
-#define CONFIG_CLASSINFO_ID_SIZE 64
-#define CONFIG_CLASSINFO_NAME_SIZE 128
-#define CONFIG_SCOINFO_STUID_SIZE CONFIG_STUINFO_ID_SIZE
-#define CONFIG_SCOINFO_CLASSID_SIZE CONFIG_CLASSINFO_ID_SIZE
-#define CONFIG_MOINFO_MSG_SIZE 512
-#define CONFIG_MOINFO_STUID_SIZE CONFIG_STUINFO_ID_SIZE
-#define CONFIG_ACHINFO_STUID_SIZE CONFIG_STUINFO_ID_SIZE
+/** defines are declared here. */
+#include "defines.h"
 
 #include "ikernel.h"
 
@@ -108,6 +92,7 @@ void SelfCheck()
     _internal_color_system_init();
     printf("启动内核...\n");
     _internal_kernel_start();
+    //Sleep(3000);
 
     printf("初始化学生系统...\n");
     stuinfo=NULL;
