@@ -8,8 +8,11 @@
 
 //#define DEF_GAMEHARBOR_NEED_DNS
 #define DEF_GAMEHARBOR_SERVER_DOMAIN "gameharbor.cn"
-#define DEF_GAMEHARBOR_SERVER_IP 
+#define DEF_GAMEHARBOR_SERVER_IP "123.206.86.73"
 #define DEF_GAMEHARBOR_SERVER_PORT 56789
+
+#define DEF_KERNEL_ENABLE 1
+#define DEF_KERNEL_OUTPUT_MESSAGE 1
 
 #define CONFIG_STUINFO_ID_SIZE 64
 #define CONFIG_STUINFO_NAME_SIZE 128
@@ -21,6 +24,8 @@
 #define CONFIG_MOINFO_MSG_SIZE 512
 #define CONFIG_MOINFO_STUID_SIZE CONFIG_STUINFO_ID_SIZE
 #define CONFIG_ACHINFO_STUID_SIZE CONFIG_STUINFO_ID_SIZE
+
+#include "ikernel.h"
 
 typedef struct
 {
@@ -101,6 +106,9 @@ void SelfCheck()
     printf("正在启动...\n");
     printf("初始化颜色系统...\n");
     _internal_color_system_init();
+    printf("启动内核...\n");
+    _internal_kernel_start();
+
     printf("初始化学生系统...\n");
     stuinfo=NULL;
     stuinfo=GetList(sizeof(StudentInfo),1024);
@@ -158,6 +166,22 @@ void BeforeExit()
     printf("正在完成本地同步...\n");
     printf("正在完成云同步...\n");
     Sleep(3000);/// Cloud Service is a Time-Consuming Work
+    printf("正在等待各子系统相应...\n");
+
+    printf("关闭成就系统...\n");
+    FreeList(achinfo);
+    printf("关闭品行系统...\n");
+    FreeList(moinfo);
+    printf("关闭成绩系统...\n");
+    FreeList(scoinfo);
+    printf("关闭课程系统...\n");
+    FreeList(clsinfo);
+    printf("关闭学生系统...\n");
+    FreeList(stuinfo);
+
+    printf("全部子系统关闭.等待内核返回...\n");
+    SendKernelMessage(KM_STOP);
+
     printf("执行退出...\n");
 }
 
@@ -231,6 +255,7 @@ MonityInfo* _FindMonityInfoByStuID_Term(const char* StuID,int Term)
 #include "InfoEdit.h"
 #include "InfoDel.h"
 #include "InfoSearch.h"
+#include "InfoView.h"
 #include "CloudService.h"
 #include "Settings.h"
 
@@ -427,6 +452,8 @@ void GDI_InfoView_MainPad()
             switch(cid)
             {
             case 1:
+                GDI_InfoView_ScoreSegmentView();
+                break;
             case 2:
             case 3:
             case 4:
