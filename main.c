@@ -244,6 +244,8 @@ MonityInfo* _FindMonityInfoByStuID_Term(const char* StuID,int Term)
 #include "CloudService.h"
 #include "Settings.h"
 
+#include "PassInput.h"
+
 void GDI_InfoInput_MainPad()
 {
     int cid=1;
@@ -440,7 +442,11 @@ void GDI_InfoView_MainPad()
                 GDI_InfoView_ScoreSegmentView();
                 break;
             case 2:
+                GDI_InfoView_ScoreTermView();
+                break;
             case 3:
+                GDI_InfoView_RankInOneClass();
+                break;
             case 4:
             case 5:
             case 6:
@@ -465,6 +471,82 @@ void GDI_ScolarShip_MainPad()
     }
 }
 
+void GDI_Export_ImportFromDisk()
+{
+    ClearScreen();
+    printf("导出到磁盘\n");
+    cprint(yellow,black);printf("以下数据将被导出:\n学生信息,课程信息,成绩信息,品行表现,奖惩信息.\n");
+    resetcolor();printf("请输入导出文件的名称,默认为ExportData.bin\n");
+    memset(tmpbuff,0,1024);
+    gets(tmpbuff);
+    if(strlen(tmpbuff)<1)
+    {
+        strcpy(tmpbuff,"ExportData.bin");
+    }
+    else
+    {
+        if(strstr(tmpbuff,".bin")==NULL)
+        {
+            strcat(tmpbuff,".bin");
+        }
+    }
+    FILE* fp=fopen(tmpbuff,"wb");
+    if(fp==NULL)
+    {
+        printf("错误!不能导出到%s\n",tmpbuff);
+        printf("按任意键返回...\n");ClearInput();getch();
+        return;
+    }
+    /// Export: StudentInfo (stuinfo)
+    int sz=GetListSize(stuinfo);
+    fwrite(&sz,sizeof(sz),1,fp);
+    for(int i=0;i<sz;i++)
+    {
+        StudentInfo* p=GetMember(stuinfo,i);
+        fwrite(p,sizeof(StudentInfo),1,fp);
+    }
+    /// Export: ClassInfo (clsinfo)
+    sz=GetListSize(clsinfo);
+    fwrite(&sz,sizeof(sz),1,fp);
+    for(int i=0;i<sz;i++)
+    {
+        ClassInfo* p=GetMember(clsinfo,i);
+        fwrite(p,sizeof(ClassInfo),1,fp);
+    }
+    /// Export: ScoreInfo (scoinfo)
+    sz=GetListSize(scoinfo);
+    fwrite(&sz,sizeof(sz),1,fp);
+    for(int i=0;i<sz;i++)
+    {
+        ScoreInfo* p=GetMember(scoinfo,i);
+        fwrite(p,sizeof(ScoreInfo),1,fp);
+    }
+    /// Export: MonityInfo (moinfo)
+    sz=GetListSize(moinfo);
+    fwrite(&sz,sizeof(sz),1,fp);
+    for(int i=0;i<sz;i++)
+    {
+        MonityInfo* p=GetMember(moinfo,i);
+        fwrite(p,sizeof(MonityInfo),1,fp);
+    }
+    /// Export: AchieveInfo (achinfo)
+    sz=GetListSize(achinfo);
+    fwrite(&sz,sizeof(sz),1,fp);
+    for(int i=0;i<sz;i++)
+    {
+        AchieveInfo* p=GetMember(achinfo,i);
+        fwrite(p,sizeof(AchieveInfo),1,fp);
+    }
+    /// Done.
+    fclose(fp);
+
+    printf("导出成功!\n");
+    ClearInput();getch();
+}
+void GDI_Export_ExportToDisk()
+{
+
+}
 void GDI_Export_MainPad()
 {
     int cid=1;
@@ -472,7 +554,27 @@ void GDI_Export_MainPad()
     {
         ClearScreen();
         printf("本地导入/导出\n");
-        _DEF_GDI_NOT_IMPLIED_(cid);
+        TAG(1,cid);printf("从本地存储导入...\n");
+        TAG(2,cid);printf("导出到本地存储...\n");
+        TAG(3,cid);printf("返回\n");
+        resetcolor();printf("-------------------\n");
+        INFOPRINT(1,cid,"从外部存储器导入数据\n");
+        INFOPRINT(2,cid,"导出数据到外部存储器\n");
+        INFOPRINT(3,cid,"返回上一菜单.\n");
+        if(GetAction(cid,1,3))
+        {
+            switch(cid)
+            {
+            case 1:
+                GDI_Export_ImportFromDisk();
+                break;
+            case 2:
+                GDI_Export_ExportToDisk();
+                break;
+            case 3:
+                return;
+            }
+        }
     }
 }
 
@@ -591,8 +693,17 @@ void GDI_MainPad()
         }
     }
 }
+/*
+void SafeCheck()
+{
+    printf("请输入密码:\n");
+    int ret=password_input(tmpbuff,'\r',1,6);
+    printf("RET: %d PASS: %s\n",ret,tmpbuff);
+}
+*/
 int main()
 {
+    //SafeCheck();
     SelfCheck();
     GDI_MainPad();
     BeforeExit();
