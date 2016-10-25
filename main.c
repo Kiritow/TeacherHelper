@@ -10,7 +10,12 @@
 #define bzero(Pointer,Size) memset(Pointer,0,Size)
 
 /// Settings (Dynamic Settings)
+/// Scroll: You Can Use UP and DOWN to scroll.
 int _settings_use_scroll;
+/// Fast Sort: In Listing Sorted Functions, \
+fast sort means a faster sort in original data-field. However this may cause \
+cache invalidation
+int _settings_use_fast_sort;
 
 
 int _global_login_status;
