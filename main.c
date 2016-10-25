@@ -9,6 +9,9 @@
 #include "defines.h"
 #define bzero(Pointer,Size) memset(Pointer,0,Size)
 
+/// Settings (Dynamic Settings)
+int _settings_use_scroll;
+
 
 int _global_login_status;
 char tmpbuff[4096];
@@ -64,6 +67,9 @@ DYHANDLE ls_achieve;
 #define PostErrorMsgAndExit(FormatString,Args...) \
     do{cprint(red,black);printf(FormatString,##Args);exit(0);}while(0);
 
+/// Forward Declaration.
+#include "fwd_decl.h"
+
 #include "startlock.h"
 
 void SelfCheck()
@@ -85,6 +91,13 @@ void SelfCheck()
     {
         PostErrorMsgAndExit("初始化学生系统失败.\n");
     }
+
+    printf("初始化缓存系统...\n");
+    if(_init_cache()<0)
+    {
+        PostErrorMsgAndExit("初始化缓存系统失败.\n");
+    }
+
     printf("初始化课程系统...\n");
     ls_course=NULL;
     ls_course=GetList(sizeof(CourseInfo),1024);
