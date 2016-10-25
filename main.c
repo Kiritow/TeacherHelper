@@ -24,17 +24,17 @@ typedef struct
 
 typedef struct
 {
-    char ID[CONFIG_CLASSID_SIZE]; ///课程号
+    char ID[CONFIG_COURSEID_SIZE]; ///课程号
     int Type;///课程类别 0 选修 1 必修
     int Term;///学期 1~8
-    char Name[CONFIG_CLASSNAME_SIZE];
+    char Name[CONFIG_COURSENAME_SIZE];
     double Score;///学分 2.5 (?)
-}ClassInfo;
+}CourseInfo;
 
 typedef struct
 {
     char StudentID[CONFIG_STUID_SIZE];
-    char ClassID[CONFIG_CLASSID_SIZE];
+    char CourseID[CONFIG_COURSEID_SIZE];
     double Score;
     int flag;
 }ScoreInfo;
@@ -55,7 +55,7 @@ typedef struct
 #include "dynamicvec.h"
 
 DYHANDLE ls_student;
-DYHANDLE ls_class;
+DYHANDLE ls_course;
 DYHANDLE ls_score;
 DYHANDLE ls_achieve;
 
@@ -86,9 +86,9 @@ void SelfCheck()
         PostErrorMsgAndExit("初始化学生系统失败.\n");
     }
     printf("初始化课程系统...\n");
-    ls_class=NULL;
-    ls_class=GetList(sizeof(ClassInfo),1024);
-    if(ls_class==NULL)
+    ls_course=NULL;
+    ls_course=GetList(sizeof(CourseInfo),1024);
+    if(ls_course==NULL)
     {
         PostErrorMsgAndExit("初始化课程系统失败.\n");
     }
@@ -138,7 +138,7 @@ void BeforeExit()
     printf("关闭成绩系统...\n");
     FreeList(ls_score);
     printf("关闭课程系统...\n");
-    FreeList(ls_class);
+    FreeList(ls_course);
     printf("关闭学生系统...\n");
     FreeList(ls_student);
 
@@ -147,7 +147,8 @@ void BeforeExit()
 
 #include "basic_find.h"
 #include "Student.h"
-#include "Class.h"
+#include "ClassCache.h"
+#include "Course.h"
 #include "Score.h"
 #include "Achieve.h"
 #include "View.h"
