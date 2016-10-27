@@ -12,9 +12,9 @@
 /// Settings (Dynamic Settings)
 /// Scroll: You Can Use UP and DOWN to scroll.
 int _settings_use_scroll;
-/// Fast Sort: In Listing Sorted Functions, \
-fast sort means a faster sort in original data-field. However this may cause \
-cache invalidation
+/// Fast Sort: In Listing Sorted Functions,
+/// fast sort means a faster sort in original data-field. However this may cause
+/// cache invalidation
 int _settings_use_fast_sort;
 
 
@@ -209,7 +209,7 @@ void GDI_MainPad()
                 GDI_Student_MainPad();
                 break;
             case 2:
-                GDI_Class_MainPad();
+                GDI_Course_MainPad();
                 break;
             case 3:
                 GDI_Score_MainPad();
