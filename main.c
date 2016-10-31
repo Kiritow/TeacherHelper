@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <conio.h>
+#include <stdarg.h>
 
 #include <windows.h>
 #include <winsock2.h>
@@ -9,24 +10,32 @@
 #include "defines.h"
 #define bzero(Pointer,Size) memset(Pointer,0,Size)
 
-/// Settings (Dynamic Settings)
+/** Settings (Dynamic Settings) -----------------------------*/
+
 /// Scroll: You Can Use UP and DOWN to scroll.
 int _settings_use_scroll;
 /// Fast Sort: In Listing Sorted Functions,
 /// fast sort means a faster sort in original data-field. However this may cause
 /// cache invalidation
 int _settings_use_fast_sort;
+/// Log System: Use Log(Message,...) to Output Something to log.
+/// _log_fp: Pointer to FILE .
+int _settings_use_log;
+FILE* _log_fp;
 
 
+/** Global Variables ----------------------------------------*/
 int _global_login_status;
+int _global_flag_is_first_use;
 char tmpbuff[4096];
+
 
 typedef struct
 {
     char ID[CONFIG_STUID_SIZE];
     char Name[CONFIG_STUNAME_SIZE];
     char Dormitory[CONFIG_STUDOM_SIZE];
-    int Sexual;
+    int Sexual;/// 1 男 0 女
     int Age;
 }StudentInfo;
 
@@ -70,7 +79,11 @@ DYHANDLE ls_achieve;
 #include "gui.h"
 
 #define PostErrorMsgAndExit(FormatString,Args...) \
-    do{cprint(red,black);printf(FormatString,##Args);exit(0);}while(0);
+    do{cprint(red,black);printf(FormatString,##Args);exit(0);}while(0)
+
+#define THIS_FUNCTION_IS_UNFINISHED \
+    WARNING("开发者: 这个功能还没有完成,应该不会对外开放.如果您进入到这里,请反馈给我.谢谢.\n"); \
+    GetUserInputKey()
 
 /// Forward Declaration.
 #include "fwd_decl.h"
@@ -141,6 +154,30 @@ void SelfCheck()
     printf("启动完毕.\n");
 }
 
+void WelcomePage()
+{
+    if(_global_flag_is_first_use==0) return;
+    ClearScreen();
+    TITLE("欢迎使用 班主任管家软件\n");
+    printf("感谢您使用HC TECH 班主任管家软件.\n"
+           "当前版本: v1.2x (20161024x)\n"
+           "\n"
+           ">>>功能简介\n"
+           "班主任管家软件以学生信息、课程信息为基础，以品行表现成绩（辅导员、班主任、班级评议成绩）和业务课程成绩为评价依据，每学期评定一次奖学金，奖学金作为学生评定各种荣誉的主要依据，并将各种评价结果计入奖惩信息库。根据业务成绩进行各种统计分析。\n"
+           ">>>操作方法\n"
+           "本软件采用HC TECH Easy Control System. 使用上下左右方向键移动选项,回车键进行确认.\n"
+           ">>>反馈\n"
+           "如在使用过程中遇到任何问题,请发邮件到1362050620@qq.com联系开发者.\n"
+           "\n"
+           "更新日志\n"
+           "V1.1x (20161006x)\n"
+           "\t优化启动速度,修复云平台操作的bug.\n"
+           "V1.0x (20160928x)\n"
+           "\t班主任管家软件发布.\n");
+    printf("---------------------\n按任意键继续\n");
+    GetUserInputKey();
+}
+
 void BeforeExit()
 {
     ClearScreen();
@@ -165,11 +202,14 @@ void BeforeExit()
 
 #include "basic_find.h"
 #include "Student.h"
-#include "ClassCache.h"
 #include "Course.h"
 #include "Score.h"
 #include "Achieve.h"
+#include "FastCache.h"
 #include "View.h"
+
+#include "DiskIO.h"
+#include "NetIO.h"
 
 void GDI_MainPad()
 {
@@ -245,6 +285,7 @@ void GDI_MainPad()
 int main()
 {
     SelfCheck();
+    WelcomePage();
     GDI_MainPad();
     BeforeExit();
     return 0;
