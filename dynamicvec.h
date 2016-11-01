@@ -135,20 +135,28 @@ void _dynamicvec_init()
 }
 
 
-/** V0.3x Update: AutoRelease.
+/** V0.4x Update: AutoRelease.
 *   A C++ Class-like Memory Manager.
+*Updates:
+*V0.3x --> V0.4x : Release Function Pointer Added.
 */
+
+#define CONFIG_AUTORELEASE_STACK_MAX 64
+
+typedef void (*RFUNC)(DYHANDLE);
 
 typedef struct
 {
-    DYHANDLE todo[32];
+    DYHANDLE todo[CONFIG_AUTORELEASE_STACK_MAX];
     int counter;
+    RFUNC func;
 }AutoRelease;
 
 AutoRelease GetAutoReleaser()
 {
     AutoRelease a;
     a.counter=0;
+    a.func=NULL;
     return a;
 }
 
@@ -156,15 +164,26 @@ void AddRelease(AutoRelease* _auto_releaser,DYHANDLE handle_to_auto_release)
 {
     _auto_releaser->todo[_auto_releaser->counter++]=handle_to_auto_release;
 }
-void DoRelease(AutoRelease* _auto_releaser)
+int PopRelease(AutoRelease* _auto_releaser)
 {
-    while(_auto_releaser->counter>0)
+    if(_auto_releaser->counter>0)
     {
+        if(_auto_releaser->func)
+        {
+            _auto_releaser->func(_auto_releaser->todo[_auto_releaser->counter-1]);
+        }
         FreeList(_auto_releaser->todo[_auto_releaser->counter-1]);
         -- _auto_releaser->counter;
+        return 0;
     }
+    return -1;
+}
+void DoRelease(AutoRelease* _auto_releaser)
+{
+    while(PopRelease(_auto_releaser)>=0);
 }
 
 #define USE_RELEASE AutoRelease _internal_releaser=GetAutoReleaser()
 #define ADD_RELEASE(hand) AddRelease(&_internal_releaser,hand)
+#define POP_RELEASE(hand) PopRelease(&_internal_releaser)
 #define DO_RELEASE DoRelease(&_internal_releaser)
