@@ -43,19 +43,3 @@ ScoreInfo* _FindScoreInfoByStuID_CourseID_Flag(const char* StuID,const char* Cou
     }
     return NULL;
 }
-AchieveInfo* _FindAchieveInfoByStuID(const char* StuID)
-{
-    if(!ls_achieve) return NULL;
-    int i;
-    int sz=GetListSize(ls_achieve);
-    for(i=0;i<sz;i++)
-    {
-        AchieveInfo* p=(AchieveInfo*)GetMember(ls_achieve,i);
-        if(strcmp(p->StudentID,StuID)==0)
-        {
-            return p;
-        }
-    }
-    return NULL;
-}
-
