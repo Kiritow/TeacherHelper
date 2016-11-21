@@ -29,6 +29,12 @@ DYHANDLE GetList(int TypeSize,int MaxSize)
     memset(h->pdata,0,(h->typesz)*(h->maxsz));
     return h;
 }
+void ClearList(DYHANDLE handle)
+{
+    if(!handle||!handle->pdata) return;
+    handle->used=0;
+    memset(handle->pdata,0,handle->typesz*handle->maxsz);
+}
 void FreeList(DYHANDLE Handle)
 {
     if(Handle->pdata) free(Handle->pdata);
@@ -50,13 +56,15 @@ void* GetMember(DYHANDLE Handle,int index)
 }
 int GetListSize(DYHANDLE Handle)
 {
+    if(!Handle) return -1;
     return Handle->used;
 }
 int GetListMaxSize(DYHANDLE Handle)
 {
+    if(!Handle) return -1;
     return Handle->maxsz;
 }
-void* TryMoreList(DYHANDLE Handle)
+DYHANDLE TryMoreList(DYHANDLE Handle)
 {
     void* pnewdata=malloc((Handle->typesz)*((Handle->maxsz)*2));
     if(!pnewdata)
@@ -185,5 +193,5 @@ void DoRelease(AutoRelease* _auto_releaser)
 
 #define USE_RELEASE AutoRelease _internal_releaser=GetAutoReleaser()
 #define ADD_RELEASE(hand) AddRelease(&_internal_releaser,hand)
-#define POP_RELEASE(hand) PopRelease(&_internal_releaser)
+#define POP_RELEASE() PopRelease(&_internal_releaser)
 #define DO_RELEASE DoRelease(&_internal_releaser)
