@@ -25,8 +25,11 @@ FILE* _log_fp;
 
 
 /** Global Variables ----------------------------------------*/
-int _global_login_status;
-int _global_flag_is_first_use;
+int _global_login_status;/// Login Status : 0=Not Logged in; 1=Logged in.
+int _global_userid;/// User ID
+int _global_flag_is_first_use;/// Is First Use? 0=No 1=Yes
+char _global_cloud_username[1024];
+
 char tmpbuff[4096];
 
 
@@ -67,6 +70,7 @@ typedef struct
     int type;
     STime time;
     int score;
+    char Message[CONFIG_ACHMSG_SIZE];
 }AchieveInfo;
 
 #include "dynamicvec.h"
@@ -89,6 +93,7 @@ DYHANDLE ls_achieve;
 #include "fwd_decl.h"
 
 #include "startlock.h"
+#include "kernel.h"
 
 void SelfCheck()
 {
@@ -147,9 +152,14 @@ void SelfCheck()
     }
 
     printf("加载数据...\n");
+    _Do_Load(1);
 
     printf("正在完成云同步...\n");
     _global_login_status=0;///设置初始状态为未登录(0)
+    _global_userid=-1;
+
+    printf("读取设置...\n");
+    _Load_Settings();
 
     printf("启动完毕.\n");
 }
@@ -189,6 +199,7 @@ void BeforeExit()
     printf("准备退出...\n");
     printf("正在完成数据同步，请不要关闭本窗口.\n");
     printf("正在完成本地同步...\n");
+    _Do_Save(0);
     printf("正在完成云同步...\n");
     Sleep(3000);/// Cloud Service is a Time-Consuming Work
     printf("正在等待各子系统相应...\n");
@@ -206,15 +217,23 @@ void BeforeExit()
 }
 
 #include "basic_find.h"
+
 #include "Student.h"
 #include "Course.h"
 #include "Score.h"
 #include "Achieve.h"
 #include "FastCache.h"
 #include "View.h"
+#include "Scholar.h"
+#include "Search.h"
 
 #include "DiskIO.h"
 #include "NetIO.h"
+
+#include "Export.h"
+#include "CloudService.h"
+
+#include "Settings.h"
 
 void GDI_MainPad()
 {
